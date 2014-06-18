@@ -1,0 +1,2 @@
+this.number = 42
+
