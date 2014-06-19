@@ -10,5 +10,7 @@
         </constructor-arg>
         <constructor-arg name="clock" ref="clock" />
     </bean>
+
+    <bean class="uk.co.grahamcox.worlds.webapp.HomeController" />
 </beans>
 

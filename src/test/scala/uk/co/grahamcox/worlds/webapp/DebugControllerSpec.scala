@@ -25,7 +25,7 @@ class DebugControllerSpec extends FunSpec with Matchers {
   // This is needed to bootstrap Spring
   new TestContextManager(this.getClass()).prepareTestInstance(this)
 
-  describe("/api/debug") {
+  describe("GET /api/debug") {
     val mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build()
 
     describe("/info") {
