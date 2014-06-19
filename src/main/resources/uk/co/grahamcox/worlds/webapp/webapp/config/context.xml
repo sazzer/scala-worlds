@@ -15,6 +15,7 @@
 
        <context:property-placeholder />
 
-       <import resource="views.xml" />
+    <import resource="views.xml" />
+    <import resource="controllers.xml" />
 </beans>
 
