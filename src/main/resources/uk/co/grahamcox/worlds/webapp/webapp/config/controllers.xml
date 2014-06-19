@@ -8,6 +8,7 @@
         <constructor-arg name="buildInfo">
             <util:properties location="classpath:/build.info" />
         </constructor-arg>
+        <constructor-arg name="clock" ref="clock" />
     </bean>
 </beans>
 
