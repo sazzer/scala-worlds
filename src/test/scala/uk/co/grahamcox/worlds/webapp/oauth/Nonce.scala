@@ -3,7 +3,7 @@ package uk.co.grahamcox.worlds.webapp.oauth
 import org.scalatest.{ShouldMatchers, FunSpec}
 
 /**
- * Created by graham on 21/06/14.
+ * Tests for the UUID Nonce Generator
  */
 class UuidNonceGeneratorSpec extends FunSpec with ShouldMatchers {
   describe("UuidNonceGenerator") {
