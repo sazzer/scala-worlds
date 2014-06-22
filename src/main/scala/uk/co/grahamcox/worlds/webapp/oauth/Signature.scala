@@ -1,6 +1,6 @@
 package uk.co.grahamcox.worlds.webapp.oauth
 
-import java.net.URI
+import java.net.{URLEncoder, URI}
 import java.time.Instant
 
 import org.eintr.loglady.Logging
@@ -29,28 +29,12 @@ case class OAuthRequestDetails(val request: RequestDetails,
                                val accessToken: Option[AccessToken] = None,
                                val callback: Option[URI] = None)
 
-object Helpers {
-  /**
-   * Wrapper class to make it easy to percent encode a string
-   * @param str the string
-   */
-  implicit class PercentEncodingString(str: String) {
-    /**
-     * Percent encode the string
-     * @return the percent encoded string
-     */
-    def percentEncode = str
-  }
-}
-
 /*
  * Class to acutally sign a request
  * @param consumerKey the consumer key to use
  */
 class Signer(consumerKey: ConsumerKey) extends Logging {
   def sign(request: OAuthRequestDetails): Signature = {
-    import Helpers._
-
     val oauthParams: Map[String, String] = Map(
       "oauth_consumer_key" -> consumerKey.key,
       "oauth_nonce" -> request.nonce.value,
@@ -61,14 +45,14 @@ class Signer(consumerKey: ConsumerKey) extends Logging {
       case Some(callback: URI) => Map("oauth_callback" -> callback.toString)
       case _ => Map()
     }) ++ (request.accessToken match {
-      case Some(accessToken: AccessToken) => Map("oauth_token" -> accessToken.secret)
+      case Some(accessToken: AccessToken) => Map("oauth_token" -> accessToken.key)
       case _ => Map()
     })
     val queryParams = request.request.params
     val paramsMap = oauthParams ++ queryParams
 
     val paramsString = paramsMap.toSeq
-      .map(param => (param._1.percentEncode, param._2.percentEncode))       // Percent Encode the params
+      .map(param => (percentEncode(param._1), percentEncode(param._2)))     // Percent Encode the params
       .sortWith((a, b) => a._1 < b._1)                                      // Sort the params
       .map(param => param._1 + "=" + param._2)                              // Combine into <key>=<value>
       .mkString("&")                                                        // Combine with "&" separators
@@ -77,10 +61,32 @@ class Signer(consumerKey: ConsumerKey) extends Logging {
     val signingString = Seq(request.request.method,
       request.request.url.toString,
       paramsString)
-      .map(e => e.percentEncode)                                            // Percent Encode (Again)
+      .map(e => percentEncode(e))                                           // Percent Encode (Again)
       .mkString("&")                                                        // Combine with "&" separators
     log.debug(s"Signing String: ${signingString}")
 
+    val signingKey = percentEncode(consumerKey.secret) +
+      "&" +
+      percentEncode(request.accessToken.map(_.secret).getOrElse(""))
+    log.debug(s"Signing Key: ${signingKey}")
+
     Signature("tnnArxj06cWHq44gCs1OSKk/jLY=")
   }
+
+  /**
+   * Percent encode the string
+   * @param str The string to encide
+   * @return the percent encoded string
+   */
+  private def percentEncode(str: String) = {
+    val dontEncode = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-._~"
+
+    (str.map {
+      c => c match {
+        case c if dontEncode.contains(c) => c
+        case c => "%" + c.toInt.toHexString.toUpperCase
+      }
+    }).mkString("")
+  }
+
 }
