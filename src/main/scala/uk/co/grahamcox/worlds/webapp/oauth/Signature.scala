@@ -1,6 +1,6 @@
 package uk.co.grahamcox.worlds.webapp.oauth
 
-import java.net.{URLEncoder, URI}
+import java.net.URI
 import java.time.Instant
 import java.util.Base64
 import javax.crypto.Mac
@@ -13,8 +13,8 @@ import org.eintr.loglady.Logging
  * @param value the value of the signature
  * @param method the signature method
  */
-case class Signature(val value: String,
-                     val method: String = "HMAC-SHA1")
+case class Signature(value: String,
+                     method: String = "HMAC-SHA1")
 
 /**
  * OAuth details for the request we are signing
@@ -25,12 +25,12 @@ case class Signature(val value: String,
  * @param accessToken the access token, if we have one
  * @param callback the callback, if we have one
  */
-case class OAuthRequestDetails(val request: RequestDetails,
-                               val nonce: Nonce,
-                               val timestamp: Instant,
-                               val version: String = "1.0",
-                               val accessToken: Option[AccessToken] = None,
-                               val callback: Option[URI] = None)
+case class OAuthRequestDetails(request: RequestDetails,
+                               nonce: Nonce,
+                               timestamp: Instant,
+                               version: String = "1.0",
+                               accessToken: Option[AccessToken] = None,
+                               callback: Option[URI] = None)
 
 /*
  * Class to acutally sign a request
@@ -38,40 +38,40 @@ case class OAuthRequestDetails(val request: RequestDetails,
  */
 class Signer(consumerKey: ConsumerKey) extends Logging {
   def sign(request: OAuthRequestDetails): Signature = {
-    val oauthParams: Map[String, String] = Map(
-      "oauth_consumer_key" -> consumerKey.key,
-      "oauth_nonce" -> request.nonce.value,
-      "oauth_signature_method" -> "HMAC-SHA1",
-      "oauth_timestamp" -> request.timestamp.getEpochSecond.toString,
-      "oauth_version" -> "1.0"
+    val oauthParams: Map[HeaderName, String] = Map(
+      HeaderNames.CONSUMER_KEY -> consumerKey.key,
+      HeaderNames.NONCE -> request.nonce.value,
+      HeaderNames.SIGNATURE_METHOD -> "HMAC-SHA1",
+      HeaderNames.TIMESTAMP -> request.timestamp.getEpochSecond.toString,
+      HeaderNames.VERSION -> "1.0"
     ) ++ (request.callback match {
-      case Some(callback: URI) => Map("oauth_callback" -> callback.toString)
+      case Some(callback: URI) => Map(HeaderNames.CALLBACK -> callback.toString)
       case _ => Map()
     }) ++ (request.accessToken match {
-      case Some(accessToken: AccessToken) => Map("oauth_token" -> accessToken.key)
+      case Some(accessToken: AccessToken) => Map(HeaderNames.TOKEN -> accessToken.key)
       case _ => Map()
     })
     val queryParams = request.request.params
-    val paramsMap = oauthParams ++ queryParams
+    val paramsMap = queryParams ++ oauthParams.map {param => (param._1.toString, param._2)}
 
     val paramsString = paramsMap.toSeq
       .map(param => (percentEncode(param._1), percentEncode(param._2)))     // Percent Encode the params
       .sortWith((a, b) => a._1 < b._1)                                      // Sort the params
       .map(param => param._1 + "=" + param._2)                              // Combine into <key>=<value>
       .mkString("&")                                                        // Combine with "&" separators
-    log.debug(s"Params string: ${paramsString}")
+    log.debug(s"Params string: $paramsString")
 
     val signingString = Seq(request.request.method,
       request.request.url.toString,
       paramsString)
       .map(e => percentEncode(e))                                           // Percent Encode (Again)
       .mkString("&")                                                        // Combine with "&" separators
-    log.debug(s"Signing String: ${signingString}")
+    log.debug(s"Signing String: $signingString")
 
     val signingKey = percentEncode(consumerKey.secret) +
       "&" +
       percentEncode(request.accessToken.map(_.secret).getOrElse(""))
-    log.debug(s"Signing Key: ${signingKey}")
+    log.debug(s"Signing Key: $signingKey")
 
     Signature(hash(signingString, signingKey))
   }
@@ -84,12 +84,12 @@ class Signer(consumerKey: ConsumerKey) extends Logging {
   private def percentEncode(str: String) = {
     val dontEncode = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-._~"
 
-    (str.map {
+    str.map {
       c => c match {
         case c if dontEncode.contains(c) => c
         case c => "%" + c.toInt.toHexString.toUpperCase
       }
-    }).mkString("")
+    } mkString ""
   }
 
   /**
@@ -106,7 +106,7 @@ class Signer(consumerKey: ConsumerKey) extends Logging {
     val rawHash = mac.doFinal(signingString.getBytes("UTF-8"))
 
     val hash = Base64.getEncoder.encodeToString(rawHash)
-    log.debug(s"Hash: ${hash}")
+    log.debug(s"Hash: $hash")
     hash
   }
 }
