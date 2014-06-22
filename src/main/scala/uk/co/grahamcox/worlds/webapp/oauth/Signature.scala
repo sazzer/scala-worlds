@@ -2,6 +2,9 @@ package uk.co.grahamcox.worlds.webapp.oauth
 
 import java.net.{URLEncoder, URI}
 import java.time.Instant
+import java.util.Base64
+import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
 
 import org.eintr.loglady.Logging
 
@@ -70,7 +73,7 @@ class Signer(consumerKey: ConsumerKey) extends Logging {
       percentEncode(request.accessToken.map(_.secret).getOrElse(""))
     log.debug(s"Signing Key: ${signingKey}")
 
-    Signature("tnnArxj06cWHq44gCs1OSKk/jLY=")
+    Signature(hash(signingString, signingKey))
   }
 
   /**
@@ -89,4 +92,21 @@ class Signer(consumerKey: ConsumerKey) extends Logging {
     }).mkString("")
   }
 
+  /**
+   * Generate the HMAC-SHA1 hash of the given string with the given key
+   * @param signingString the string to hash
+   * @param signingKey the key to hash with
+   * @return the hash
+   */
+  private def hash(signingString: String, signingKey: String) = {
+    val key = new SecretKeySpec(signingKey.getBytes("UTF-8"), "HmacSHA1")
+    val mac = Mac.getInstance("HmacSHA1")
+    mac.init(key)
+
+    val rawHash = mac.doFinal(signingString.getBytes("UTF-8"))
+
+    val hash = Base64.getEncoder.encodeToString(rawHash)
+    log.debug(s"Hash: ${hash}")
+    hash
+  }
 }
