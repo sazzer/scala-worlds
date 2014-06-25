@@ -1,6 +1,6 @@
 package uk.co.grahamcox.worlds.webapp.oauth
 
-import java.net.URI
+import java.net.{URLDecoder, URI}
 
 import collection.JavaConversions._
 import org.eintr.loglady.Logging
@@ -31,7 +31,9 @@ class RequestInterceptor(authorizor: Authorizor,
     val requestDetails = RequestDetails(
       method = request.getMethod.toString,
       url = UriComponentsBuilder.fromUri(request.getURI).replaceQuery("").build().toUri,
-      params = UriComponentsBuilder.fromUri(request.getURI).build().getQueryParams.toSingleValueMap.toMap
+      params = UriComponentsBuilder.fromUri(request.getURI).build().getQueryParams.toSingleValueMap
+        .toMap
+        .mapValues(v => URLDecoder.decode(v, "UTF-8"))
     )
 
     log.debug(s"Authorizing request to ${requestDetails}")
