@@ -37,6 +37,8 @@ case class OAuthRequestDetails(request: RequestDetails,
  * @param consumerKey the consumer key to use
  */
 class Signer(consumerKey: ConsumerKey) extends Logging {
+  import Utils._
+
   def sign(request: OAuthRequestDetails): Signature = {
     val oauthParams: Map[HeaderName, String] = Map(
       HeaderNames.CONSUMER_KEY -> consumerKey.key,
@@ -74,22 +76,6 @@ class Signer(consumerKey: ConsumerKey) extends Logging {
     log.debug(s"Signing Key: $signingKey")
 
     Signature(hash(signingString, signingKey))
-  }
-
-  /**
-   * Percent encode the string
-   * @param str The string to encide
-   * @return the percent encoded string
-   */
-  private def percentEncode(str: String) = {
-    val dontEncode = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-._~"
-
-    str.map {
-      c => c match {
-        case c if dontEncode.contains(c) => c
-        case c => "%" + c.toInt.toHexString.toUpperCase
-      }
-    } mkString ""
   }
 
   /**
