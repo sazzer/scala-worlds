@@ -12,5 +12,9 @@
     </bean>
 
     <bean class="uk.co.grahamcox.worlds.webapp.HomeController" />
+
+    <bean class="uk.co.grahamcox.worlds.webapp.auth.TwitterAuthController">
+        <constructor-arg name="authorizor" ref="twitterAuthorizor" />
+    </bean>
 </beans>
 
