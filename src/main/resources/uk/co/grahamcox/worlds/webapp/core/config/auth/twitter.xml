@@ -4,8 +4,8 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
     <bean id="twitterConsumerKey" class="uk.co.grahamcox.worlds.oauth.ConsumerKey">
-        <constructor-arg name="key" value="${twitter.key:}" />
-        <constructor-arg name="secret" value="${twitter.secret:}" />
+        <constructor-arg name="key" value="${twitter.key}" />
+        <constructor-arg name="secret" value="${twitter.secret}" />
     </bean>
 
     <bean id="twitterAuthorizor" class="uk.co.grahamcox.worlds.oauth.Authorizor">
