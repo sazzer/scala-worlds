@@ -14,16 +14,17 @@ import scala.collection.JavaConversions._
 class TwitterAuthentication(authorizor: Authorizor,
                            requestTokenUrl: URI, 
                            authenticateUrl: URI) {
-  /** The rest template to use for the Twitter API requests */
-  private val restTemplate: RestTemplate = new RestTemplate()
-
-  restTemplate.setInterceptors(Seq(new RequestInterceptor(authorizor = authorizor, accessToken = None)))
 
   /**
    * Start the authentication process
    * @return a URL to redirect the user to
    */
-  def start = {
+  def start(callback: Option[URI]) = {
+    val restTemplate: RestTemplate = new RestTemplate()
+    restTemplate.setInterceptors(Seq(new RequestInterceptor(authorizor = authorizor,
+      accessToken = None,
+      callback = callback)))
+
     val requestToken = restTemplate.postForEntity(requestTokenUrl, null, classOf[String])
 
     val requestTokenValues = Map(requestToken.getBody.split("&")
