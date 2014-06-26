@@ -1,5 +1,7 @@
 package uk.co.grahamcox.worlds.webapp.auth
 
+import java.util.UUID
+
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.{ResponseBody, RequestParam, RequestMapping}
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
@@ -17,8 +19,14 @@ class TwitterAuthController(authenticator: TwitterAuthentication) {
    */
   @RequestMapping(params = Array("!oauth_token", "!oauth_verifier"))
   def preAuth = {
-    val callbackUrl = ServletUriComponentsBuilder.fromCurrentContextPath().path("/auth/twitter").build()
-    val redirectUrl = authenticator.start(Option(callbackUrl.toUri))
+    val sessionId = UUID.randomUUID().toString
+
+    val callbackUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
+      .path("/auth/twitter")
+      .queryParam("session", sessionId)
+      .build()
+
+    val redirectUrl = authenticator.start(sessionId, Option(callbackUrl.toUri))
 
     s"redirect:${redirectUrl}"
   }
@@ -27,11 +35,14 @@ class TwitterAuthController(authenticator: TwitterAuthentication) {
    * Handle the response from twitter after authenticating the user
    * @param token the oauth token
    * @param verifier the oauth verifier value
+   * @param sessionId the Session ID to use
    */
   @RequestMapping(params = Array("oauth_token", "oauth_verifier"))
   @ResponseBody
   def postAuth(@RequestParam("oauth_token") token: String,
-               @RequestParam("oauth_verifier") verifier: String) = {
-    Array(token, verifier)
+               @RequestParam("oauth_verifier") verifier: String,
+               @RequestParam("session") sessionId: String) = {
+
+    authenticator.authenticate(sessionId, token, verifier).toArray
   }
 }

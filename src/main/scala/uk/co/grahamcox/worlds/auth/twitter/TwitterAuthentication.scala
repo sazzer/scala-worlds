@@ -4,22 +4,30 @@ import java.net.URI
 
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.util.UriComponentsBuilder
-import uk.co.grahamcox.worlds.oauth.{RequestInterceptor, Authorizor}
+import uk.co.grahamcox.worlds.oauth.{AccessToken, RequestInterceptor, Authorizor}
 import scala.collection.JavaConversions._
+
+case class Session(accessToken: AccessToken)
 
 /**
  * Class to handle the details of authentication against Twitter
  * @param authorizor The Authorizor to use
  */
 class TwitterAuthentication(authorizor: Authorizor,
-                           requestTokenUrl: URI, 
-                           authenticateUrl: URI) {
+                            requestTokenUrl: URI,
+                            accessTokenUrl: URI,
+                            authenticateUrl: URI) {
+
+  /** The session map to use */
+  val sessions = collection.mutable.Map[String, Session]()
 
   /**
    * Start the authentication process
+   * @param sessionId The Session ID for the session
    * @return a URL to redirect the user to
    */
-  def start(callback: Option[URI]) = {
+  def start(sessionId: String,
+            callback: Option[URI]) = {
     val restTemplate: RestTemplate = new RestTemplate()
     restTemplate.setInterceptors(Seq(new RequestInterceptor(authorizor = authorizor,
       accessToken = None,
@@ -31,8 +39,36 @@ class TwitterAuthentication(authorizor: Authorizor,
       .map(p => p.split("=", 2))
       .map(p => (p(0), p(1))) : _*)
 
+    sessions(sessionId) = Session(
+      accessToken = AccessToken(
+        key = requestTokenValues("oauth_token"),
+        secret = requestTokenValues("oauth_token_secret")))
+
     UriComponentsBuilder.fromUri(authenticateUrl)
       .queryParam("oauth_token", requestTokenValues("oauth_token"))
       .build()    
+  }
+
+  /**
+   * Handle the authentication response from Twitter
+   * @param sessionId the Session ID for the session
+   * @param token the OAuth Token that is being authenticated
+   * @param verifier the OAuth verification value
+   */
+  def authenticate(sessionId: String, token: String, verifier: String) = {
+    val restTemplate: RestTemplate = new RestTemplate()
+    restTemplate.setInterceptors(Seq(new RequestInterceptor(authorizor = authorizor,
+      accessToken = sessions.get(sessionId).map(session => session.accessToken))))
+
+    val accessTokenUrl = UriComponentsBuilder.fromUri(this.accessTokenUrl).queryParam("oauth_verifier", verifier).build()
+    val accessToken = restTemplate.postForEntity(accessTokenUrl.toUri, null, classOf[String])
+
+    val accessTokenValues = Map(accessToken.getBody.split("&")
+      .map(p => p.split("=", 2))
+      .map(p => (p(0), p(1))) : _*)
+
+    sessions.remove(sessionId)
+
+    accessTokenValues
   }
 }
