@@ -4,7 +4,7 @@ import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.{ResponseBody, RequestMapping}
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.util.UriComponentsBuilder
-import uk.co.grahamcox.worlds.webapp.oauth.{RequestInterceptor, Authorizor}
+import uk.co.grahamcox.worlds.oauth.{RequestInterceptor, Authorizor}
 import scala.collection.JavaConversions._
 /**
  * Controller to support authentication against the Twitter service

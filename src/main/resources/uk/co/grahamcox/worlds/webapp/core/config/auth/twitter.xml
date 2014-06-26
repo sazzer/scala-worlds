@@ -3,19 +3,19 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <bean id="twitterConsumerKey" class="uk.co.grahamcox.worlds.webapp.oauth.ConsumerKey">
+    <bean id="twitterConsumerKey" class="uk.co.grahamcox.worlds.oauth.ConsumerKey">
         <constructor-arg name="key" value="${twitter.key:}" />
         <constructor-arg name="secret" value="${twitter.secret:}" />
     </bean>
 
-    <bean id="twitterAuthorizor" class="uk.co.grahamcox.worlds.webapp.oauth.Authorizor">
+    <bean id="twitterAuthorizor" class="uk.co.grahamcox.worlds.oauth.Authorizor">
         <constructor-arg name="clock" ref="clock" />
         <constructor-arg name="consumerKey" ref="twitterConsumerKey" />
         <constructor-arg name="nonceGenerator">
-            <bean class="uk.co.grahamcox.worlds.webapp.oauth.UuidNonceGenerator" />
+            <bean class="uk.co.grahamcox.worlds.oauth.UuidNonceGenerator" />
         </constructor-arg>
         <constructor-arg name="signer">
-            <bean class="uk.co.grahamcox.worlds.webapp.oauth.Signer">
+            <bean class="uk.co.grahamcox.worlds.oauth.Signer">
                 <constructor-arg name="consumerKey" ref="twitterConsumerKey" />
             </bean>
         </constructor-arg>

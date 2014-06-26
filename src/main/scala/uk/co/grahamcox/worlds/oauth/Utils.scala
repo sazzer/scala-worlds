@@ -1,4 +1,4 @@
-package uk.co.grahamcox.worlds.webapp.oauth
+package uk.co.grahamcox.worlds.oauth
 
 /**
  * Some utilities that make life easier
