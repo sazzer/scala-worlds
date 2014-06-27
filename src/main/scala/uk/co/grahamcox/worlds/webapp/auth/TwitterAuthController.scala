@@ -44,6 +44,6 @@ class TwitterAuthController(authenticator: TwitterAuthentication) {
                @RequestParam("oauth_verifier") verifier: String,
                @RequestParam("session") sessionId: String) = {
 
-    authenticator.authenticate(SessionId(sessionId), token, verifier).toArray
+    authenticator.authenticate(SessionId(sessionId), token, verifier).toString
   }
 }

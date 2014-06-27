@@ -32,8 +32,8 @@ class Session {
    * Remove the given value from the session
    * @param name the name of the session
    */
-  def remove(name: String) {
-    sessionData.remove(name)
+  def remove[T](name: String) = {
+    sessionData.remove(name).map(_.asInstanceOf[T])
   }
 }
 
