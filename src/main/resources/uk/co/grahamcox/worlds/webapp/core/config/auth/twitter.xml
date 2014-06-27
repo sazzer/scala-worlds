@@ -22,6 +22,7 @@
     </bean>
 
     <bean id="twitterAuthentication" class="uk.co.grahamcox.worlds.auth.twitter.TwitterAuthentication">
+        <constructor-arg name="sessions" ref="sessions" />
         <constructor-arg name="authorizor" ref="twitterAuthorizor" />
         <constructor-arg name="requestTokenUrl" value="https://api.twitter.com/oauth/request_token" />
         <constructor-arg name="accessTokenUrl" value="https://api.twitter.com/oauth/access_token" />

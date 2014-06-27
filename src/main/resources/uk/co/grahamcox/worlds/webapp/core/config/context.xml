@@ -10,6 +10,7 @@
                                   ignore-resource-not-found="true"/>
 
     <bean id="clock" class="java.time.Clock" factory-method="systemUTC" />
+    <bean id="sessions" class="uk.co.grahamcox.worlds.Sessions" />
 
     <import resource="auth/auth.xml" />
 </beans>

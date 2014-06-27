@@ -5,6 +5,7 @@ import java.util.UUID
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.{ResponseBody, RequestParam, RequestMapping}
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
+import uk.co.grahamcox.worlds.SessionId
 import uk.co.grahamcox.worlds.auth.twitter.TwitterAuthentication
 /**
  * Controller to support authentication against the Twitter service
@@ -26,7 +27,7 @@ class TwitterAuthController(authenticator: TwitterAuthentication) {
       .queryParam("session", sessionId)
       .build()
 
-    val redirectUrl = authenticator.start(sessionId, Option(callbackUrl.toUri))
+    val redirectUrl = authenticator.start(SessionId(sessionId), Option(callbackUrl.toUri))
 
     s"redirect:${redirectUrl}"
   }
@@ -43,6 +44,6 @@ class TwitterAuthController(authenticator: TwitterAuthentication) {
                @RequestParam("oauth_verifier") verifier: String,
                @RequestParam("session") sessionId: String) = {
 
-    authenticator.authenticate(sessionId, token, verifier).toArray
+    authenticator.authenticate(SessionId(sessionId), token, verifier).toArray
   }
 }
